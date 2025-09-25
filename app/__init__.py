@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 db = SQLAlchemy()
 
@@ -11,5 +12,11 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     db.init_app(app)
+    
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
+    
+    with app.app_context():
+        db.create_all()
     
     return app
