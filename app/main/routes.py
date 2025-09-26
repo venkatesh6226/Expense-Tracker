@@ -8,16 +8,77 @@ from app.main import bp
 @bp.route('/')
 @bp.route('/dashboard')
 def dashboard():
+    salary = Salary.query.first()
+    salary_amount = salary.amount if salary else 0
+    
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        extract('month', Expense.date) == current_month,
+        extract('year', Expense.date) == current_year
+    ).scalar() or 0
+    
+    total_savings = db.session.query(func.sum(Saving.amount)).filter(
+        extract('month', Saving.date) == current_month,
+        extract('year', Saving.date) == current_year
+    ).scalar() or 0
+    
+    total_investments = db.session.query(func.sum(Investment.amount)).filter(
+        extract('month', Investment.date) == current_month,
+        extract('year', Investment.date) == current_year
+    ).scalar() or 0
+    
+    total_spent = total_expenses + total_savings + total_investments
+    remaining_budget = salary_amount - total_spent
+    recent_expenses = Expense.query.order_by(Expense.date.desc()).limit(5).all()
+    recent_savings = Saving.query.order_by(Saving.date.desc()).limit(3).all()
+    recent_investments = Investment.query.order_by(Investment.date.desc()).limit(2).all()
+    
+    recent_transactions = []
+    
+    for expense in recent_expenses:
+        recent_transactions.append({
+            'date': expense.date,
+            'type': 'Expense',
+            'category': expense.category,
+            'amount': expense.amount,
+            'notes': expense.notes
+        })
+    
+    for saving in recent_savings:
+        recent_transactions.append({
+            'date': saving.date,
+            'type': 'Saving',
+            'category': 'Savings',
+            'amount': saving.amount,
+            'notes': saving.notes
+        })
+    
+    for investment in recent_investments:
+        recent_transactions.append({
+            'date': investment.date,
+            'type': 'Investment',
+            'category': investment.investment_type,
+            'amount': investment.amount,
+            'notes': investment.notes
+        })
+    
+    recent_transactions.sort(key=lambda x: x['date'], reverse=True)
+    recent_transactions = recent_transactions[:10]
+    
+    budget_percentage = (remaining_budget / salary_amount * 100) if salary_amount > 0 else 0
+    
+    
     return render_template('main/dashboard.html',
-                         salary_amount=0,
-                         total_expenses=0,
-                         total_savings=0,
-                         total_investments=0,
-                         remaining_budget=0,
-                         budget_percentage=0,
-                         recent_expenses=[],
-                         recent_savings=[],
-                         recent_investments=[])
+                         salary_amount=salary_amount,
+                         total_expenses=total_expenses,
+                         total_savings=total_savings,
+                         total_investments=total_investments,
+                         remaining_budget=remaining_budget,
+                         budget_percentage=budget_percentage,
+                         recent_expenses=recent_expenses,
+                         recent_savings=recent_savings,
+                         recent_investments=recent_investments)
 
 @bp.route('/salary', methods=['GET', 'POST'])
 def salary():
