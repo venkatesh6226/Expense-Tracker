@@ -128,3 +128,50 @@ def add_expense():
     
     flash('Expense added successfully!', 'success')
     return redirect(url_for('main.expenses'))
+
+@bp.route('/edit_expense/<int:expense_id>', methods=['POST'])
+def edit_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    
+    amount = float(request.form.get('amount', 0))
+    category = request.form.get('category', '').strip()
+    date_str = request.form.get('date', '')
+    notes = request.form.get('notes', '').strip()
+    
+    if amount <= 0:
+        flash('Amount must be greater than 0.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    if not category:
+        flash('Category is required.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    if not date_str:
+        flash('Date is required.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    try:
+        expense_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    expense.amount = amount
+    expense.category = category
+    expense.date = expense_date
+    expense.notes = notes
+    
+    db.session.commit()
+    
+    flash('Expense updated successfully!', 'success')
+    return redirect(url_for('main.expenses'))
+
+@bp.route('/delete_expense/<int:expense_id>')
+def delete_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    
+    db.session.delete(expense)
+    db.session.commit()
+    
+    flash('Expense deleted successfully!', 'success')
+    return redirect(url_for('main.expenses'))
