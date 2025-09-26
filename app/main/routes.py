@@ -175,3 +175,84 @@ def delete_expense(expense_id):
     
     flash('Expense deleted successfully!', 'success')
     return redirect(url_for('main.expenses'))
+
+@bp.route('/savings')
+def savings():
+    savings = Saving.query.order_by(Saving.date.desc()).all()
+    
+    total_savings = sum(saving.amount for saving in savings)
+    
+    return render_template('main/savings.html', savings=savings, total_savings=total_savings)
+
+@bp.route('/add_saving', methods=['POST'])
+def add_saving():
+    amount = float(request.form.get('amount', 0))
+    date_str = request.form.get('date', '')
+    notes = request.form.get('notes', '').strip()
+    
+    if amount <= 0:
+        flash('Amount must be greater than 0.', 'error')
+        return redirect(url_for('main.savings'))
+    
+    if not date_str:
+        flash('Date is required.', 'error')
+        return redirect(url_for('main.savings'))
+    
+    try:
+        saving_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format.', 'error')
+        return redirect(url_for('main.savings'))
+    
+    saving = Saving(
+        amount=amount,
+        date=saving_date,
+        notes=notes
+    )
+    
+    db.session.add(saving)
+    db.session.commit()
+    
+    flash('Saving added successfully!', 'success')
+    return redirect(url_for('main.savings'))
+
+@bp.route('/edit_saving/<int:saving_id>', methods=['POST'])
+def edit_saving(saving_id):
+    saving = Saving.query.get_or_404(saving_id)
+    
+    amount = float(request.form.get('amount', 0))
+    date_str = request.form.get('date', '')
+    notes = request.form.get('notes', '').strip()
+    
+    if amount <= 0:
+        flash('Amount must be greater than 0.', 'error')
+        return redirect(url_for('main.savings'))
+    
+    if not date_str:
+        flash('Date is required.', 'error')
+        return redirect(url_for('main.savings'))
+    
+    try:
+        saving_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format.', 'error')
+        return redirect(url_for('main.savings'))
+    
+    saving.amount = amount
+    saving.date = saving_date
+    saving.notes = notes
+    
+    db.session.commit()
+    
+    flash('Saving updated successfully!', 'success')
+    return redirect(url_for('main.savings'))
+
+@bp.route('/delete_saving/<int:saving_id>')
+def delete_saving(saving_id):
+    saving = Saving.query.get_or_404(saving_id)
+    
+    db.session.delete(saving)
+    db.session.commit()
+    
+    flash('Saving deleted successfully!', 'success')
+    return redirect(url_for('main.savings'))
