@@ -1,4 +1,8 @@
-from flask import render_template
+from flask import render_template, redirect, url_for, flash, request, make_response
+from datetime import datetime, timezone, timedelta
+from sqlalchemy import func, extract
+from app import db
+from app.models import Salary, Expense, Saving, Investment
 from app.main import bp
 
 @bp.route('/')
@@ -14,3 +18,113 @@ def dashboard():
                          recent_expenses=[],
                          recent_savings=[],
                          recent_investments=[])
+
+@bp.route('/salary', methods=['GET', 'POST'])
+def salary():
+    if request.method == 'POST':
+        amount = float(request.form.get('amount', 0))
+        
+        if amount < 0:
+            flash('Salary amount cannot be negative.', 'error')
+            return redirect(url_for('main.salary'))
+        
+        salary = Salary.query.first()
+        if salary:
+            salary.amount = amount
+            ist_timezone = timezone(timedelta(hours=5, minutes=30))
+            salary.updated_at = datetime.now(ist_timezone)
+        else:
+            ist_timezone = timezone(timedelta(hours=5, minutes=30))
+            salary = Salary(amount=amount, updated_at=datetime.now(ist_timezone))
+            db.session.add(salary)
+        
+        db.session.commit()
+        flash('Salary updated successfully!', 'success')
+        return redirect(url_for('main.salary'))
+    
+    salary = Salary.query.first()
+    current_salary = salary.amount if salary else 0
+    
+    response = make_response(render_template('main/salary.html', salary=salary))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+@bp.route('/expenses')
+def expenses():
+    expenses = Expense.query.order_by(Expense.date.desc()).all()
+    
+    total_expenses = sum(expense.amount for expense in expenses)
+    
+    return render_template('main/expenses.html', 
+                         expenses=expenses, 
+                         total_expenses=total_expenses)
+
+@bp.route('/add_expense', methods=['POST'])
+def add_expense():
+    amount = float(request.form.get('amount', 0))
+    category = request.form.get('category', '').strip()
+    date_str = request.form.get('date', '')
+    notes = request.form.get('notes', '').strip()
+    
+    if amount <= 0:
+        flash('Amount must be greater than 0.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    if not category:
+        flash('Category is required.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    if not date_str:
+        flash('Date is required.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    try:
+        expense_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    salary = Salary.query.first()
+    if not salary or salary.amount <= 0:
+        flash('Please set your monthly salary first before adding expenses.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        extract('month', Expense.date) == current_month,
+        extract('year', Expense.date) == current_year
+    ).scalar() or 0
+    
+    total_savings = db.session.query(func.sum(Saving.amount)).filter(
+        extract('month', Saving.date) == current_month,
+        extract('year', Saving.date) == current_year
+    ).scalar() or 0
+    
+    total_investments = db.session.query(func.sum(Investment.amount)).filter(
+        extract('month', Investment.date) == current_month,
+        extract('year', Investment.date) == current_year
+    ).scalar() or 0
+    
+    total_spent = total_expenses + total_savings + total_investments
+    remaining_budget = salary.amount - total_spent
+    
+    if amount > remaining_budget:
+        flash(f'Insufficient budget! You can only spend ₹{remaining_budget:.2f} more this month.', 'error')
+        return redirect(url_for('main.expenses'))
+    
+    expense = Expense(
+        amount=amount,
+        category=category,
+        date=expense_date,
+        notes=notes
+    )
+    
+    db.session.add(expense)
+    db.session.commit()
+    
+    flash('Expense added successfully!', 'success')
+    return redirect(url_for('main.expenses'))
