@@ -256,3 +256,96 @@ def delete_saving(saving_id):
     
     flash('Saving deleted successfully!', 'success')
     return redirect(url_for('main.savings'))
+
+@bp.route('/investments')
+def investments():
+    investments = Investment.query.order_by(Investment.date.desc()).all()
+    
+    total_investments = sum(investment.amount for investment in investments)
+    
+    return render_template('main/investments.html', investments=investments, total_investments=total_investments)
+
+@bp.route('/add_investment', methods=['POST'])
+def add_investment():
+    amount = float(request.form.get('amount', 0))
+    investment_type = request.form.get('investment_type', '').strip()
+    date_str = request.form.get('date', '')
+    notes = request.form.get('notes', '').strip()
+    
+    if amount <= 0:
+        flash('Amount must be greater than 0.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    if not investment_type:
+        flash('Investment type is required.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    if not date_str:
+        flash('Date is required.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    try:
+        investment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    investment = Investment(
+        amount=amount,
+        investment_type=investment_type,
+        date=investment_date,
+        notes=notes
+    )
+    
+    db.session.add(investment)
+    db.session.commit()
+    
+    flash('Investment added successfully!', 'success')
+    return redirect(url_for('main.investments'))
+
+@bp.route('/edit_investment/<int:investment_id>', methods=['POST'])
+def edit_investment(investment_id):
+    investment = Investment.query.get_or_404(investment_id)
+    
+    amount = float(request.form.get('amount', 0))
+    investment_type = request.form.get('investment_type', '').strip()
+    date_str = request.form.get('date', '')
+    notes = request.form.get('notes', '').strip()
+    
+    if amount <= 0:
+        flash('Amount must be greater than 0.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    if not investment_type:
+        flash('Investment type is required.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    if not date_str:
+        flash('Date is required.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    try:
+        investment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format.', 'error')
+        return redirect(url_for('main.investments'))
+    
+    investment.amount = amount
+    investment.investment_type = investment_type
+    investment.date = investment_date
+    investment.notes = notes
+    
+    db.session.commit()
+    
+    flash('Investment updated successfully!', 'success')
+    return redirect(url_for('main.investments'))
+
+@bp.route('/delete_investment/<int:investment_id>')
+def delete_investment(investment_id):
+    investment = Investment.query.get_or_404(investment_id)
+    
+    db.session.delete(investment)
+    db.session.commit()
+    
+    flash('Investment deleted successfully!', 'success')
+    return redirect(url_for('main.investments'))
