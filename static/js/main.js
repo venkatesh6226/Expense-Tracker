@@ -129,7 +129,7 @@ $(document).ready(function() {
             confirmField.removeClass('is-invalid');
         }
     });
-    $('select[name="category"]:not(#expenseForm select, #savingForm select, #investmentForm select), select[name="type"]:not(#expenseForm select, #savingForm select, #investmentForm select)').on('change', function() {
+    $('select[name="category"]:not(#expenseForm select, #savingForm select, #investmentForm select, #editExpenseForm select, #editSavingForm select), select[name="type"]:not(#expenseForm select, #savingForm select, #investmentForm select, #editInvestmentForm select)').on('change', function() {
         $(this).closest('form').submit();
     });
 
