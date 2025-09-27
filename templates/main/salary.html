@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Salary - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-money-bill-wave me-2"></i>Monthly Salary
+        </h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Update Salary
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if salary %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Current monthly salary: <strong>₹{{ "%.0f"|format(salary.amount) }}</strong>
+                    <br>
+                    <small>Last updated: {{ salary.updated_at.strftime('%Y-%m-%d %H:%M') }} IST</small>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No salary information found. Please set your monthly salary to start tracking your budget.
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('main.salary') }}" id="salaryForm">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Monthly Salary (₹)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number"
+                                   class="form-control"
+                                   id="amount"
+                                   name="amount"
+                                   step="1"
+                                   min="0"
+                                   value="{{ salary.amount|int if salary else '' }}"
+                                   required>
+                        </div>
+                        <div class="form-text">Enter your monthly take-home salary amount.</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>
+                            {% if salary %}Update Salary{% else %}Set Salary{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Budget Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>50/30/20 Rule:</strong> 50% needs, 30% wants, 20% savings
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Emergency Fund:</strong> Aim for 3-6 months of expenses
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Track Regularly:</strong> Review your spending weekly
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Set Goals:</strong> Define clear financial objectives
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#amount').on('input', function() {
+        let value = $(this).val();
+        if (value.includes('.')) {
+            $(this).val(Math.floor(parseFloat(value)));
+        }
+    });
+
+    $('#salaryForm').on('submit', function(e) {
+        var submitBtn = $('#submitBtn');
+        var originalText = submitBtn.html();
+
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Updating...');
+        submitBtn.prop('disabled', true);
+
+        setTimeout(function() {
+            submitBtn.html(originalText);
+            submitBtn.prop('disabled', false);
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}
