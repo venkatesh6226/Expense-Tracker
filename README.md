@@ -56,7 +56,9 @@ A comprehensive full-stack web application for managing personal finances, built
 
 Watch the complete walkthrough of the Expense Tracker application:
 
-[📹 Click here to watch the Video Walkthrough](https://github.com/venkatesh6226/Expense-Tracker/raw/main/LIveDemo/Video%20Walkthrough.mov)
+[![Watch Video on Vimeo](https://img.shields.io/badge/Watch%20on-Vimeo-1ab7ea?style=for-the-badge&logo=vimeo&logoColor=white)](https://vimeo.com/1125417287)
+
+🎬 **[Click here to watch the full demo on Vimeo](https://vimeo.com/1125417287)**
 
 _Note: The video demonstrates all features of the application including dashboard, salary management, expense tracking, savings, and investments_
 
