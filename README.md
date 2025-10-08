@@ -50,6 +50,43 @@ A comprehensive full-stack web application for managing personal finances, built
 - **Keyword Search** in notes
 - **Pagination** for large datasets
 
+## 🎥 Live Demo
+
+### Video Walkthrough
+
+Watch the complete walkthrough of the Expense Tracker application:
+
+https://github.com/user-attachments/assets/Video%20Walkthrough.mov
+
+_Note: Click to view the video demonstration of all features_
+
+### 📸 Screenshots
+
+#### Dashboard
+
+![Dashboard](LIveDemo/Dashboard.png)
+_Overview of your financial status with budget tracking and recent transactions_
+
+#### Salary Management
+
+![Salary](LIveDemo/Salary.png)
+_Set and update your monthly salary_
+
+#### Expense Tracking
+
+![Expenses](LIveDemo/Expenses.png)
+_Track your daily expenses with categories and search functionality_
+
+#### Savings
+
+![Savings](LIveDemo/Savings.png)
+_Monitor your savings with detailed records_
+
+#### Investments
+
+![Investments](LIveDemo/Investments.png)
+_Manage multiple investment types and track your portfolio_
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -171,7 +208,6 @@ The application will be available at `http://localhost:5001`
 - **Delete**: Remove transactions with confirmation
 - **Filter**: Use category/type filters and search functionality
 - **Pagination**: Navigate through large datasets
-  
 
 ## 🔧 Configuration
 
@@ -188,7 +224,6 @@ FLASK_ENV=production
 ### Database Configuration
 
 The application uses SQLite by default. For production, you can switch to PostgreSQL or MySQL by updating the database URI in `app/__init__.py`.
-
 
 ## 🚀 Deployment
 
